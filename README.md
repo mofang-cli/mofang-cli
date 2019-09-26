@@ -27,6 +27,4 @@ Templates:
   
 #### Todo List
     
-   * 动态修改项目名称
-   * 先选择不同技术栈
-   * 再选择不同模版
+* more config params

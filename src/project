@@ -1,7 +1,7 @@
 const inquirer = require('inquirer');
 const fse = require('fs-extra');
 const download = require('download-git-repo');
-const { TEMPLATE_GIT_REPO, INJECT_FILES } = require('./constants');
+const { INJECT_FILES } = require('./constants');
 const chalk = require('chalk');
 const ora = require('ora');
 const path = require('path');
@@ -9,11 +9,14 @@ const memFs = require('mem-fs');
 const editor = require('mem-fs-editor');
 const { getDirFileName } = require('./utils');
 const { exec } = require('child_process');
+const templates = require('./templates')
 
 function Project(options) {
 	this.config = Object.assign({
 		projectName: '',
-		description: ''
+		description: '',
+		template: '',
+		author: ''
 	}, options);
 	const store = memFs.create();
 	this.memFsEditor = editor.create(store);
@@ -29,15 +32,15 @@ Project.prototype.create = function() {
 
 Project.prototype.inquire = function() {
 	const prompts = [];
-	const { projectName, description } = this.config;
-	if (typeof projectName !== 'string') {
+	const { projectName, description, author } = this.config;
+	if (projectName === '') {
 		prompts.push({
 			type: 'input',
 			name: 'projectName',
-			message: '请输入项目名：',
+			message: 'Please input project name:',
 			validate(input) {
 				if (!input) {
-					return '项目名不能为空';
+					return 'Project name must not null';
 				}
 				if (fse.existsSync(input)) {
 					return '当前目录已存在同名项目，请更换项目名';
@@ -62,13 +65,33 @@ Project.prototype.inquire = function() {
 		});
 	}
 
-	if (typeof description !== 'string') {
+	if (description === '') {
 		prompts.push({
 			type: 'input',
 			name: 'description',
-			message: '请输入项目描述'
+			message: 'Please input project desc'
 		});
 	}
+
+	if (author === '') {
+		prompts.push({
+			type: 'input',
+			name: 'author',
+			message: 'Please input author'
+		});
+	}
+
+	prompts.push({
+		name: 'template',
+		type: 'list',
+		message: `Please pick a template:`,
+		choices: templates.map(item => {
+			return {
+				name: item.templateName,
+				value: item.templateUrl
+			}
+		})
+	})
 
 	return inquirer.prompt(prompts);
 };
@@ -80,25 +103,24 @@ Project.prototype.inquire = function() {
  * @param {object} data 替换文本字段
  */
 Project.prototype.injectTemplate = function(source, dest, data) {
-	this.memFsEditor.copyTpl(
-		source,
-		dest,
-		data
-	);
+	this.memFsEditor.writeJSON(dest, Object.assign({}, this.memFsEditor.readJSON(source), data))
 }
 
 Project.prototype.generate = function() {
-	const { projectName, description } = this.config;
+	const { projectName, description, author, template } = this.config;
 	const projectPath = path.join(process.cwd(), projectName);
 	const downloadPath = path.join(projectPath, '__download__');
 
 	const downloadSpinner = ora('🚀  Downloading template...');
 	downloadSpinner.start();
 	// 下载git repo
-	download(TEMPLATE_GIT_REPO, downloadPath, { clone: true }, (err) => {
+	download(template, downloadPath, { clone: true }, (err) => {
 		if (err) {
 			downloadSpinner.color = 'red';
 			downloadSpinner.fail(err.message);
+			downloadSpinner.fail(`please check your network, make sure can access to template ${template}`);
+			fse.remove(downloadPath);
+			fse.remove(projectPath);
 			return;
 		}
 
@@ -115,8 +137,9 @@ Project.prototype.generate = function() {
 
 		INJECT_FILES.forEach((file) => {
 			this.injectTemplate(path.join(downloadPath, file), path.join(projectName, file), {
-				projectName,
-				description
+				name: projectName,
+				description,
+				author
 			});
 		});
 
