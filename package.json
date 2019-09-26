@@ -4,7 +4,7 @@
   "description": "This is a tool for init font-end template project",
   "main": "index.js",
   "bin": {
-    "mojia-fang": "./bin/www"
+    "mofang-cli": "./bin/www"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
