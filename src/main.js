@@ -9,7 +9,7 @@ const mapAction = { // 需要生成的指令数据
 		alias: 'c',
 		description: 'create a project',
 		examples: [
-			'luban-cli create <project-name>',
+			'mojia-cli create <project-name>',
 		],
 	},
 	'*': {
