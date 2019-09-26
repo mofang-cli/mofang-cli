@@ -1,7 +1,7 @@
 {
-  "name": "mojia-cli",
+  "name": "mofang-cli",
   "version": "1.0.0",
-  "description": "",
+  "description": "This is a tool for init font-end template project",
   "main": "index.js",
   "bin": {
     "mojia-cli": "./bin/www"
@@ -10,7 +10,7 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
-  "author": "",
+  "author": "weisen",
   "license": "ISC",
   "dependencies": {
     "axios": "^0.19.0",

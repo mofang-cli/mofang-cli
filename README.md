@@ -1,4 +1,4 @@
-## mojia-cli
+## mofang-cli
 
 This is a tool for init font-end template project，include react、vue project And can select
 different template to init project.
@@ -17,8 +17,8 @@ Templates:
 #### usage
 
 ```javascript
-   npm install -g mojia-cli
-   mojia-cli create project-name
+   npm install -g mofang-cli
+   mofang-cli create project-name
    
    cd project-name
    npm install

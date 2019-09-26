@@ -92,7 +92,7 @@ Project.prototype.generate = function() {
 	const projectPath = path.join(process.cwd(), projectName);
 	const downloadPath = path.join(projectPath, '__download__');
 
-	const downloadSpinner = ora('正在下载模板，请稍等...');
+	const downloadSpinner = ora('🚀  Downloading template...');
 	downloadSpinner.start();
 	// 下载git repo
 	download(TEMPLATE_GIT_REPO, downloadPath, { clone: true }, (err) => {
@@ -103,15 +103,14 @@ Project.prototype.generate = function() {
 		}
 
 		downloadSpinner.color = 'green';
-		downloadSpinner.succeed('下载成功');
+		downloadSpinner.succeed('🎉  Download Success');
 
 		// 复制文件
-		console.log();
 		const copyFiles = getDirFileName(downloadPath);
 
 		copyFiles.forEach((file) => {
 			fse.copySync(path.join(downloadPath, file), path.join(projectPath, file));
-			console.log(`${chalk.green('✔ ')}${chalk.grey(`创建: ${projectName}/${file}`)}`);
+			console.log(`${chalk.green('✔ ')}${chalk.grey(`Create: ${projectName}/${file}`)}`);
 		});
 
 		INJECT_FILES.forEach((file) => {
@@ -123,7 +122,7 @@ Project.prototype.generate = function() {
 
 		this.memFsEditor.commit(() => {
 			INJECT_FILES.forEach((file) => {
-				console.log(`${chalk.green('✔ ')}${chalk.grey(`创建: ${projectName}/${file}`)}`);
+				console.log(`🚚 ${chalk.grey(`Create: ${projectName}/${file}`)}`);
 			})
 
 			fse.remove(downloadPath);
@@ -132,7 +131,7 @@ Project.prototype.generate = function() {
 
 			// git 初始化
 			console.log();
-			const gitInitSpinner = ora(`cd ${chalk.green.bold(projectName)}目录, 执行 ${chalk.green.bold('git init')}`);
+			const gitInitSpinner = ora(`⚓ git init`);
 			gitInitSpinner.start();
 
 			const gitInit = exec('git init');
@@ -147,21 +146,22 @@ Project.prototype.generate = function() {
 
 				// 安装依赖
 				console.log();
-				const installSpinner = ora(`安装项目依赖 ${chalk.green.bold('npm install')}, 请稍后...`);
+				const installSpinner = ora(`🗃 Installing dependency. This might take a while...`);
 				installSpinner.start();
 				exec('npm install', (error, stdout, stderr) => {
 					if (error) {
 						installSpinner.color = 'red';
-						installSpinner.fail(chalk.red('安装项目依赖失败，请自行重新安装！'));
+						installSpinner.fail(chalk.red('🔗 Dependency installed, please try again.'));
 						console.log(error);
 					} else {
 						installSpinner.color = 'green';
-						installSpinner.succeed('安装依赖成功');
+						installSpinner.succeed('🎉 Dependency installed success.');
 						console.log(`${stderr}${stdout}`);
-
+						console.log(chalk.default(`🎉  Successfully created project ${chalk.yellow(projectName)}`));
+						console.log(chalk.default(`👉  Get started with the following commands:`));
 						console.log();
-						console.log(chalk.green('创建项目成功！'));
-						console.log(chalk.green('Let\'s Coding吧！嘿嘿😝'));
+						console.log(chalk.cyan(` ${chalk.gray('$')} cd ${projectName}`));
+						console.log(chalk.cyan(` ${chalk.gray('$')} npm start`));
 					}
 				})
 			})
