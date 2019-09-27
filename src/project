@@ -1,15 +1,20 @@
 const inquirer = require('inquirer');
 const fse = require('fs-extra');
 const download = require('download-git-repo');
-const { INJECT_FILES } = require('./constants');
 const chalk = require('chalk');
 const ora = require('ora');
 const path = require('path');
 const memFs = require('mem-fs');
 const editor = require('mem-fs-editor');
-const { getDirFileName } = require('./utils');
 const { exec } = require('child_process');
-const templates = require('./templates')
+const { getDirFileName } = require('./utils');
+const {
+	INJECT_FILES,
+	FRAMEWORKS,
+	VUE_TEMPLATES,
+	REACT_TEMPLATES,
+	REACT_NATIVE_TEMPLATES
+} = require('./constants');
 
 function Project(options) {
 	this.config = Object.assign({
@@ -26,9 +31,25 @@ Project.prototype.create = function() {
 	this.inquire()
 		.then((answer) => {
 			this.config = Object.assign(this.config, answer);
-			this.generate();
+			this.selectTemplate()
+				.then(answer2 => {
+					this.config = Object.assign(this.config, answer2);
+					this.generate();
+				})
 		});
 };
+
+Project.prototype.selectTemplate = function() {
+	const prompts = [];
+	prompts.push({
+		name: 'template',
+		type: 'list',
+		message: `Please pick a template:`,
+		choices: this.config.framework === 'Vue' ? VUE_TEMPLATES : (
+			this.config.framework === 'React' ?  REACT_TEMPLATES: REACT_NATIVE_TEMPLATES)
+	})
+	return inquirer.prompt(prompts);
+}
 
 Project.prototype.inquire = function() {
 	const prompts = [];
@@ -43,7 +64,7 @@ Project.prototype.inquire = function() {
 					return 'Project name must not null';
 				}
 				if (fse.existsSync(input)) {
-					return '当前目录已存在同名项目，请更换项目名';
+					return `The folder ${input} is exist, please change one`;
 				}
 				return true;
 			}
@@ -52,13 +73,13 @@ Project.prototype.inquire = function() {
 		prompts.push({
 			type: 'input',
 			name: 'projectName',
-			message: '当前目录已存在同名项目，请更换项目名',
+			message: `The folder ${projectName} is exist, please change one`,
 			validate(input) {
 				if (!input) {
-					return '项目名不能为空';
+					return 'Project name must not null';
 				}
 				if (fse.existsSync(input)) {
-					return '当前目录已存在同名项目，请更换项目名';
+					return `The folder ${input} is exist, please change one`;
 				}
 				return true;
 			}
@@ -82,15 +103,10 @@ Project.prototype.inquire = function() {
 	}
 
 	prompts.push({
-		name: 'template',
+		name: 'framework',
 		type: 'list',
-		message: `Please pick a template:`,
-		choices: templates.map(item => {
-			return {
-				name: item.templateName,
-				value: item.templateUrl
-			}
-		})
+		message: `Please pick a framework:`,
+		choices: FRAMEWORKS
 	})
 
 	return inquirer.prompt(prompts);
